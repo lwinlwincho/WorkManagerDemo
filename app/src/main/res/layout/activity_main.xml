@@ -11,17 +11,30 @@
         android:layout_width="match_parent"
         android:layout_height="200dp" />
 
+    <VideoView
+        android:id="@+id/video_view"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"/>
+
     <TextView
         android:id="@+id/tv_state"
         android:gravity="center_horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
+
+
     <Button
         android:id="@+id/btn_downlaod"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/download" />
+
+    <Button
+        android:id="@+id/btn_cancle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Cancle" />
 
 
 </LinearLayout>

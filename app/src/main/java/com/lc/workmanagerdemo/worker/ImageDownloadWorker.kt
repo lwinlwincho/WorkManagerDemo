@@ -21,8 +21,10 @@ import kotlinx.coroutines.withContext
 class ImageDownloadWorker(
     private val context: Context, workerParameters: WorkerParameters
 ) : CoroutineWorker(context, workerParameters) {
+
     override suspend fun doWork(): Result {
         startForegroundService()
+
         delay(3000L)
         val response = FileApi.instance.downloadImage()
         when {

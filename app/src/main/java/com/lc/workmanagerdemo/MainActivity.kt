@@ -1,7 +1,11 @@
 package com.lc.workmanagerdemo
 
+import android.content.ContentValues
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.*
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
+import android.provider.MediaStore
 import androidx.core.net.toUri
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
@@ -12,8 +16,13 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.lc.workmanagerdemo.databinding.ActivityMainBinding
 import com.lc.workmanagerdemo.worker.ImageDownloadWorker
+import com.lc.workmanagerdemo.worker.SaveImageToFileWorker
 import com.lc.workmanagerdemo.worker.WorkerKeys
 import com.lc.workmanagerdemo.worker.WorkerKeys.UNIQUE_WORKER_NAME
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -24,6 +33,12 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var downloadRequest: OneTimeWorkRequest
 
+    private lateinit var saveRequest: OneTimeWorkRequest
+
+    /*private var constraints = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+*/
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -32,26 +47,47 @@ class MainActivity : AppCompatActivity() {
         initWorker()
         setUpActions()
         observeWorkResult()
-
-    }
-
-    private fun setUpActions() {
-        binding.btnDownlaod.setOnClickListener {
-            workManager.beginUniqueWork(
-                UNIQUE_WORKER_NAME,
-                ExistingWorkPolicy.KEEP,
-                downloadRequest
-            ).enqueue()
-        }
     }
 
     private fun initWorker() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
+
         downloadRequest = OneTimeWorkRequestBuilder<ImageDownloadWorker>()
             .setConstraints(constraints)
             .build()
+    }
+
+
+    private fun setUpActions() {
+        binding.btnDownlaod.setOnClickListener {
+            //for one task so no need chain
+            /*workManager.beginUniqueWork(
+                 UNIQUE_WORKER_NAME,
+                 ExistingWorkPolicy.KEEP,
+                 downloadRequest
+             ).enqueue()*/
+
+            var continuation = workManager.beginUniqueWork(
+                UNIQUE_WORKER_NAME,
+                ExistingWorkPolicy.KEEP,
+                downloadRequest
+            )
+
+            saveRequest = OneTimeWorkRequestBuilder<SaveImageToFileWorker>()
+                .addTag("Output")
+                .build()
+
+            continuation = continuation.then(saveRequest)
+
+            // Actually start the work
+            continuation.enqueue()
+        }
+
+        binding.btnCancle.setOnClickListener{
+            workManager.cancelUniqueWork(UNIQUE_WORKER_NAME)
+        }
     }
 
     private fun observeWorkResult() {
